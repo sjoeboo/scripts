@@ -1,0 +1,32 @@
+#!/usr/bin/env ruby
+#
+#Ruby script to retreive/parse/allow searches on modules from
+#http://modules.rc.fas.harvard.edu/api/1/avail/
+#
+require 'net/http'
+require 'json'
+require 'pp'
+
+search = "#{ARGV[0]}"
+search = search.downcase
+
+rawmodules = Net::HTTP.get(URI.parse("http://modules.rc.fas.harvard.edu/api/1/avail/"))
+jmods = JSON.parse(rawmodules)
+error = jmods["errors"]
+if error == 0
+	#We have 0 errors, lets continue
+	mods = jmods["modules"]
+	results = Array.new
+	#Now we have JUST the modules info
+	mods.each do |name,help|
+		if (name.match(search) || help["help"].downcase.match(search))
+			results.push(name)
+		end
+	end
+	puts "The following modules had a name or description matching \"#{search}\":"
+	puts "(for more information on a module, use the \"module help <module_name>\" command)"
+	results.each do |result|
+		puts result
+	end
+end
+
